@@ -4,6 +4,7 @@ import Categoria from './Categoria';
 
 export default function Sidebar() {
   const { categorias } = useQuiosco();
+  // console.log(categorias, 'categorias');
   return (
     <>
       <Image

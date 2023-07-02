@@ -8,13 +8,12 @@ const pasos = [
 ];
 
 export default function Pasos() {
-  const { handleChangePaso, paso } = useQuiosco();
   const router = useRouter();
   const calcularProgreso = () => {
     let valor;
-    if (paso === 1) {
+    if (router.pathname === '/') {
       valor = 2;
-    } else if (paso === 2) {
+    } else if (router.pathname === '/resumen') {
       valor = 50;
     } else {
       valor = 100;
@@ -33,7 +32,6 @@ export default function Pasos() {
     }
   }
 
-  console.log(getRuta());
   return (
     <>
       <div className="flex justify-between mb-5">
@@ -44,7 +42,6 @@ export default function Pasos() {
             className="text-2xl font-bold"
             onClick={() => {
               router.push(paso.url);
-              handleChangePaso(paso.paso);
             }}
           >
             {paso.nombre}
@@ -53,7 +50,8 @@ export default function Pasos() {
       </div>
       <div className="bg-gray-100 mb-10">
         <div
-          className={`rounded-full uppercase bg-amber-500 text-xs leading-none h-2 text-center text-white w-${getRuta()}/3`}
+          className={`rounded-full uppercase bg-amber-500 text-xs leading-none h-2 text-center text-white`}
+          style={{ width: `${calcularProgreso()}%` }}
         ></div>
       </div>
     </>

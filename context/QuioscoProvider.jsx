@@ -1,4 +1,5 @@
 import axios, { Axios } from 'axios';
+import { Router, useRouter } from 'next/router';
 import { createContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -10,8 +11,10 @@ const QuioscoProvider = ({ children }) => {
   const [producto, setProducto] = useState({});
   const [modal, setModal] = useState(false);
   const [pedido, setPedido] = useState([]);
+  const [nombre, setNombre] = useState('');
+  const [total, setTotal] = useState(0);
 
-  const [paso, setPaso] = useState(1);
+  const router = useRouter();
 
   const obtenerCategorias = async () => {
     const { data } = await axios('/api/categorias');
@@ -24,9 +27,19 @@ const QuioscoProvider = ({ children }) => {
     setCategoriaActual(categorias[0]);
   }, [categorias]);
 
+  useEffect(() => {
+    const nuevoTotal = pedido.reduce(
+      (total, producto) => producto.precio * producto.cantidad + total,
+      0
+    );
+    setTotal(nuevoTotal);
+  }, [pedido]);
+
   const handleClickCategoria = (id) => {
     const categoria = categorias.filter((cat) => cat.id === id);
     setCategoriaActual(categoria[0]);
+
+    router.push('/');
   };
 
   const handleSetProducto = (producto) => {
@@ -37,7 +50,7 @@ const QuioscoProvider = ({ children }) => {
     setModal(!modal);
   };
 
-  const handleAgregarPedido = ({ categoriaId, imagen, ...producto }) => {
+  const handleAgregarPedido = ({ categoriaId, ...producto }) => {
     if (pedido.some((productoState) => productoState.id === producto.id)) {
       // console.log('Existe');
       const pedidoActualizado = pedido.map((productoState) =>
@@ -54,8 +67,42 @@ const QuioscoProvider = ({ children }) => {
     setModal(false);
   };
 
-  const handleChangePaso = (paso) => {
-    setPaso(paso);
+  const handleEditarCantidad = (id) => {
+    const productoActualizar = pedido.filter((producto) => producto.id === id);
+    setProducto(productoActualizar[0]);
+    setModal(!modal);
+  };
+  const handleEliminarProducto = (id) => {
+    const pedidoActualizado = pedido.filter((producto) => producto.id !== id);
+    setPedido(pedidoActualizado);
+  };
+  const colocarOrden = async (e) => {
+    e.preventDefault();
+    console.log('Enviando orden...');
+
+    try {
+      await axios.post('/api/ordenes', {
+        pedido,
+        nombre,
+        total,
+        fecha: Date.now().toString(),
+      });
+
+      // Resetear Aplicacion
+
+      setCategoriaActual(categorias[0]);
+      setPedido([]);
+      setNombre('');
+      setTotal(0);
+
+      toast.success('Pedido realizado correctamente...');
+
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
+    } catch (error) {
+      console.error(error, 'Error!!');
+    }
   };
 
   return (
@@ -71,8 +118,12 @@ const QuioscoProvider = ({ children }) => {
         pedido,
         setPedido,
         handleAgregarPedido,
-        paso,
-        handleChangePaso,
+        handleEditarCantidad,
+        handleEliminarProducto,
+        nombre,
+        setNombre,
+        colocarOrden,
+        total,
       }}
     >
       {children}
